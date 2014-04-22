@@ -1,5 +1,10 @@
 (in-package #:wepay)
 
+
+;;; Fill those parameters with your own WePay credentials.
+;;; Get a test account from https://stage.wepay.com if you want to play with that
+;;; The current values are there as an example but they do not work
+;;; You can also bind them dynamically if needed
 (defparameter *wepay-server* "https://stage.wepayapi.com/v2")
 (defparameter *wepay-client-id* "51959")
 (defparameter *wepay-client-secret* "b7611f9cd4")

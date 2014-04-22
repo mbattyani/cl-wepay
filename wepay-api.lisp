@@ -14,9 +14,28 @@
     (wepay-api-call "/app"
                     :parameters
                     parameters
-                    client-secret
+                    :client-secret
                     t
-                    client-id
+                    :client-id
+                    t)))
+
+;;; wepay API function wepay-app-modify
+
+(export 'wepay-app-modify)
+
+(defun wepay-app-modify (&key theme-object gaq-domains)
+  "This call lets you modify details of your API application (such as ((a href /developer/tutorial/customization title How to customize your application) adding a theme for your app))."
+  (let ((parameters (list)))
+    (when theme-object
+      (push (cons "theme_object" theme-object) parameters))
+    (when gaq-domains
+      (push (cons "gaq_domains" gaq-domains) parameters))
+    (wepay-api-call "/app/modify"
+                    :parameters
+                    parameters
+                    :client-secret
+                    t
+                    :client-id
                     t)))
 
 ;;; wepay API function wepay-user
@@ -65,10 +84,23 @@
     (wepay-api-call "/user/register"
                     :parameters
                     parameters
-                    client-secret
+                    :client-secret
                     t
-                    client-id
+                    :client-id
                     t)))
+
+;;; wepay API function wepay-user-resend-confirmation
+
+(export 'wepay-user-resend-confirmation)
+
+(defun wepay-user-resend-confirmation (&key email-message)
+  "For users who were registered via the ((a href #register class inline-call) /user/register) call, this API call lets you resend the API registration confirmation email."
+  (let ((parameters (list)))
+    (when email-message
+      (push (cons "email_message" email-message) parameters))
+    (wepay-api-call "/user/resend_confirmation"
+                    :parameters
+                    parameters)))
 
 ;;; wepay API function wepay-account
 
@@ -78,7 +110,69 @@
   "This call allows you to lookup the details of a payment account on WePay. 
 		The payment account must belong to the user associated with the access token used to make the call."
   (let ((parameters (list)))
-    (wepay-api-call "/account" :parameters parameters account-id t)))
+    (wepay-api-call "/account" :parameters parameters :account-id t)))
+
+;;; wepay API function wepay-account-find
+
+(export 'wepay-account-find)
+
+(defun wepay-account-find (&key name reference-id sort-order)
+  "This call lets you search the accounts of the user associated with the access token used to make the call.
+		You can search by name or ((span class inline-call) reference_id), and the response will be an array of all the matching accounts.
+		If both name and ((span class inline-call) reference_id) are blank, this will return an array of all of the user's accounts."
+  (let ((parameters (list)))
+    (when name (push (cons "name" name) parameters))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when sort-order (push (cons "sort_order" sort-order) parameters))
+    (wepay-api-call "/account/find" :parameters parameters)))
+
+;;; wepay API function wepay-account-create
+
+(export 'wepay-account-create)
+
+(defun wepay-account-create
+       (name description &key reference-id image-uri mcc country
+        currencies)
+  "Creates a new payment account for the user associated with the access token used to make this call. 
+		If ((span class inline-call) reference_id) is passed, it (b MUST) be unique for the application/user pair or an error will be returned.
+		NOTE: You cannot create an account with the word 'wepay' in it.
+		This is to prevent phishing attacks."
+  (let ((parameters
+         (list (cons "name" name) (cons "description" description))))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when image-uri (push (cons "image_uri" image-uri) parameters))
+    (when mcc (push (cons "mcc" mcc) parameters))
+    (when country (push (cons "country" country) parameters))
+    (when currencies (push (cons "currencies" currencies) parameters))
+    (wepay-api-call "/account/create" :parameters parameters)))
+
+;;; wepay API function wepay-account-modify
+
+(export 'wepay-account-modify)
+
+(defun wepay-account-modify
+       (&key name description reference-id image-uri gaq-domains
+        theme-object)
+  "Updates the specified properties. 
+		If ((span class inline-call) reference_id) is passed, it (strong must) be unique for the user/application pair."
+  (let ((parameters (list)))
+    (when name (push (cons "name" name) parameters))
+    (when description
+      (push (cons "description" description) parameters))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when image-uri (push (cons "image_uri" image-uri) parameters))
+    (when gaq-domains
+      (push (cons "gaq_domains" gaq-domains) parameters))
+    (when theme-object
+      (push (cons "theme_object" theme-object) parameters))
+    (wepay-api-call "/account/modify"
+                    :parameters
+                    parameters
+                    :account-id
+                    t)))
 
 ;;; wepay API function wepay-account-delete
 
@@ -93,7 +187,7 @@
     (wepay-api-call "/account/delete"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-account-get-update-uri
@@ -109,7 +203,7 @@
     (wepay-api-call "/account/get_update_uri"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-account-get-reserve-details
@@ -123,7 +217,7 @@
     (wepay-api-call "/account/get_reserve_details"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-checkout
@@ -161,7 +255,68 @@
     (wepay-api-call "/checkout/find"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
+                    t)))
+
+;;; wepay API function wepay-checkout-create
+
+(export 'wepay-checkout-create)
+
+(defun wepay-checkout-create
+       (short-description type amount &key currency long-description
+        payer-email-message payee-email-message reference-id app-fee
+        fee-payer redirect-uri callback-uri fallback-uri auto-capture
+        require-shipping shipping-fee charge-tax mode preapproval-id
+        prefill-info funding-sources payment-method-id
+        payment-method-type)
+  "Creates a checkout for an account.
+		The application can send a user to the ((span class inline-call) checkout_uri) so the user can pay the account for the amount specified."
+  (let ((parameters
+         (list (cons "short_description" short-description)
+               (cons "type" type)
+               (cons "amount" amount))))
+    (when currency (push (cons "currency" currency) parameters))
+    (when long-description
+      (push (cons "long_description" long-description) parameters))
+    (when payer-email-message
+      (push (cons "payer_email_message" payer-email-message)
+            parameters))
+    (when payee-email-message
+      (push (cons "payee_email_message" payee-email-message)
+            parameters))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when app-fee (push (cons "app_fee" app-fee) parameters))
+    (when fee-payer (push (cons "fee_payer" fee-payer) parameters))
+    (when redirect-uri
+      (push (cons "redirect_uri" redirect-uri) parameters))
+    (when callback-uri
+      (push (cons "callback_uri" callback-uri) parameters))
+    (when fallback-uri
+      (push (cons "fallback_uri" fallback-uri) parameters))
+    (when auto-capture
+      (push (cons "auto_capture" auto-capture) parameters))
+    (when require-shipping
+      (push (cons "require_shipping" require-shipping) parameters))
+    (when shipping-fee
+      (push (cons "shipping_fee" shipping-fee) parameters))
+    (when charge-tax (push (cons "charge_tax" charge-tax) parameters))
+    (when mode (push (cons "mode" mode) parameters))
+    (when preapproval-id
+      (push (cons "preapproval_id" preapproval-id) parameters))
+    (when prefill-info
+      (push (cons "prefill_info" prefill-info) parameters))
+    (when funding-sources
+      (push (cons "funding_sources" funding-sources) parameters))
+    (when payment-method-id
+      (push (cons "payment_method_id" payment-method-id) parameters))
+    (when payment-method-type
+      (push (cons "payment_method_type" payment-method-type)
+            parameters))
+    (wepay-api-call "/checkout/create"
+                    :parameters
+                    parameters
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-checkout-cancel
@@ -228,6 +383,91 @@
   (let ((parameters (list (cons "preapproval_id" preapproval-id))))
     (wepay-api-call "/preapproval" :parameters parameters)))
 
+;;; wepay API function wepay-preapproval-find
+
+(export 'wepay-preapproval-find)
+
+(defun wepay-preapproval-find
+       (&key state reference-id start limit sort-order last-checkout-id
+        shipping-fee)
+  "This call lets you search the preapprovals associated with an account or an application.
+		If ((span class inline-call) account_id) is blank, then the response will be all preapprovals for the application. Otherwise, it will be specifically for that account.
+		You can search by ((span class inline-call) state) and/or ((span class inline-call) reference_id), and the response will be an array of all the matching preapprovals."
+  (let ((parameters (list)))
+    (when state (push (cons "state" state) parameters))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when start (push (cons "start" start) parameters))
+    (when limit (push (cons "limit" limit) parameters))
+    (when sort-order (push (cons "sort_order" sort-order) parameters))
+    (when last-checkout-id
+      (push (cons "last_checkout_id" last-checkout-id) parameters))
+    (when shipping-fee
+      (push (cons "shipping_fee" shipping-fee) parameters))
+    (wepay-api-call "/preapproval/find"
+                    :parameters
+                    parameters
+                    :account-id
+                    t)))
+
+;;; wepay API function wepay-preapproval-create
+
+(export 'wepay-preapproval-create)
+
+(defun wepay-preapproval-create
+       (short-description period &key amount currency reference-id
+        app-fee fee-payer redirect-uri callback-uri fallback-uri
+        require-shipping shipping-fee charge-tax payer-email-message
+        long-description frequency start-time end-time auto-recur mode
+        prefill-info funding-sources payment-method-id
+        payment-method-type)
+  "Creates a new payment preapproval request object for the user associated with the access token used to make this call.
+		If ((span class inline-call) reference_id) is passed, it (strong MUST) be unique for the application/user pair or an error will be returned."
+  (let ((parameters
+         (list (cons "short_description" short-description)
+               (cons "period" period))))
+    (when amount (push (cons "amount" amount) parameters))
+    (when currency (push (cons "currency" currency) parameters))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when app-fee (push (cons "app_fee" app-fee) parameters))
+    (when fee-payer (push (cons "fee_payer" fee-payer) parameters))
+    (when redirect-uri
+      (push (cons "redirect_uri" redirect-uri) parameters))
+    (when callback-uri
+      (push (cons "callback_uri" callback-uri) parameters))
+    (when fallback-uri
+      (push (cons "fallback_uri" fallback-uri) parameters))
+    (when require-shipping
+      (push (cons "require_shipping" require-shipping) parameters))
+    (when shipping-fee
+      (push (cons "shipping_fee" shipping-fee) parameters))
+    (when charge-tax (push (cons "charge_tax" charge-tax) parameters))
+    (when payer-email-message
+      (push (cons "payer_email_message" payer-email-message)
+            parameters))
+    (when long-description
+      (push (cons "long_description" long-description) parameters))
+    (when frequency (push (cons "frequency" frequency) parameters))
+    (when start-time (push (cons "start_time" start-time) parameters))
+    (when end-time (push (cons "end_time" end-time) parameters))
+    (when auto-recur (push (cons "auto_recur" auto-recur) parameters))
+    (when mode (push (cons "mode" mode) parameters))
+    (when prefill-info
+      (push (cons "prefill_info" prefill-info) parameters))
+    (when funding-sources
+      (push (cons "funding_sources" funding-sources) parameters))
+    (when payment-method-id
+      (push (cons "payment_method_id" payment-method-id) parameters))
+    (when payment-method-type
+      (push (cons "payment_method_type" payment-method-type)
+            parameters))
+    (wepay-api-call "/preapproval/create"
+                    :parameters
+                    parameters
+                    :account-id
+                    t)))
+
 ;;; wepay API function wepay-preapproval-cancel
 
 (export 'wepay-preapproval-cancel)
@@ -272,7 +512,7 @@
     (wepay-api-call "/withdrawal/find/"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-withdrawal-create-
@@ -296,7 +536,7 @@
     (wepay-api-call "/withdrawal/create/"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-withdrawal-modify
@@ -320,9 +560,54 @@
     (wepay-api-call "/credit_card"
                     :parameters
                     parameters
-                    client-secret
+                    :client-secret
                     t
-                    client-id
+                    :client-id
+                    t)))
+
+;;; wepay API function wepay-credit-card-create
+
+(export 'wepay-credit-card-create)
+
+(defun wepay-credit-card-create
+       (cc-number cvv expiration-month expiration-year user-name email
+        address &key original-ip original-device)
+  "This call allows you to pass credit card information and receive back a credit_card_id.
+		You will then be able to use that ((span class inline-call) credit_card_id) on the ((a class inline-call href /developer/reference/checkout#create) /checkout/create) call to execute a payment immediately with that credit card (similar to how the ((span class inline-call) preapproval_id) on ((a class inline-call href /developer/reference/checkout#create) /checkout/create) works).
+		Note that you will need to call the ((a class inline-call href /developer/reference/checkout#create) /checkout/create) call (strong or) the ((a class inline-call href #authorize) /credit_card/authorize) call within 30 minutes or the credit card object will expire."
+  (let ((parameters
+         (list (cons "cc_number" cc-number)
+               (cons "cvv" cvv)
+               (cons "expiration_month" expiration-month)
+               (cons "expiration_year" expiration-year)
+               (cons "user_name" user-name)
+               (cons "email" email)
+               (cons "address" address))))
+    (when original-ip
+      (push (cons "original_ip" original-ip) parameters))
+    (when original-device
+      (push (cons "original_device" original-device) parameters))
+    (wepay-api-call "/credit_card/create"
+                    :parameters
+                    parameters
+                    :client-id
+                    t)))
+
+;;; wepay API function wepay-credit-card-authorize
+
+(export 'wepay-credit-card-authorize)
+
+(defun wepay-credit-card-authorize (credit-card-id)
+  "You should only use this call if you are not going to immediately make the ((a class inline-call href /developer/reference/checkout#create) /checkout/create) call with the ((span class inline-call) credit_card_id).
+		This call will authorize the card and let you use it at a later time or date (for crowdfunding, subscriptions, etc).
+		If you don’t call ((a class inline-call href #authorize) /credit_card/authorize) or ((a class inline-call href /developer/reference/checkout#create) /checkout/create) within 30 minutes then the credit card object will expire."
+  (let ((parameters (list (cons "credit_card_id" credit-card-id))))
+    (wepay-api-call "/credit_card/authorize"
+                    :parameters
+                    parameters
+                    :client-secret
+                    t
+                    :client-id
                     t)))
 
 ;;; wepay API function wepay-credit-card-find
@@ -341,9 +626,9 @@
     (wepay-api-call "/credit_card/find"
                     :parameters
                     parameters
-                    client-secret
+                    :client-secret
                     t
-                    client-id
+                    :client-id
                     t)))
 
 ;;; wepay API function wepay-credit-card-delete
@@ -356,9 +641,31 @@
     (wepay-api-call "/credit_card/delete"
                     :parameters
                     parameters
-                    client-secret
+                    :client-secret
                     t
-                    client-id
+                    :client-id
+                    t)))
+
+;;; wepay API function wepay-batch-create
+
+(export 'wepay-batch-create)
+
+(defun wepay-batch-create
+       (calls call &key authorization reference-id parameters)
+  "Creates a batch call that will allow you to make multiple API calls within a single API call. Each call will have a reference_id that can be used to identify that call.
+		In addition, an ((a href /developer/reference/access-tokens) access_token) will be passed for each call in the list, allowing you to make batch API calls for multiple users."
+  (let ((parameters (list (cons "calls" calls) (cons "call" call))))
+    (when authorization
+      (push (cons "authorization" authorization) parameters))
+    (when reference-id
+      (push (cons "reference_id" reference-id) parameters))
+    (when parameters (push (cons "parameters" parameters) parameters))
+    (wepay-api-call "/batch/create"
+                    :parameters
+                    parameters
+                    :client-secret
+                    t
+                    :client-id
                     t)))
 
 ;;; wepay API function wepay-subscription
@@ -454,7 +761,7 @@
     (wepay-api-call "/subscription_plan/find"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-subscription-plan-create
@@ -482,7 +789,7 @@
     (wepay-api-call "/subscription_plan/create"
                     :parameters
                     parameters
-                    account-id
+                    :account-id
                     t)))
 
 ;;; wepay API function wepay-subscription-plan-delete
