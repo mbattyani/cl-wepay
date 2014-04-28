@@ -2,6 +2,8 @@
 
 (setf drakma:*header-stream* *standard-output*)
 
+;;; The basic under the hound function
+
 (defun wepay-api-call (cmd &key parameters client-id client-secret account-id user-id access-token)
   (let ((more-headers ()))
       (when (or access-token (not client-secret))
@@ -31,6 +33,8 @@
                                  :want-stream t))
       (json:decode-json stream))))
 
+;;; The fun stuff: reading and parsing the doc pages to generate the client interface functions
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (in-readtable :fare-quasiquote))
 
@@ -43,8 +47,7 @@
 
 (defun extract-args (html)
   (match html
-    (`((:table :class "arguments") ,thead (:tbody ,@args))
-      (mapcan 'extract-args args))
+    (`((:table :class "arguments") ,thead (:tbody ,@args)) (mapcan 'extract-args args))
     (`(:tr ((:td :class "param") ,arg-name) (,td2 ,required) (,td3 ,type) (,td4 ,@description))
       `((,arg-name ,(string-equal required "yes") ,type ,description)))
     (t )))
@@ -82,6 +85,8 @@
    (html-parse:parse-html
     (drakma:http-request (concatenate 'string *wepay-ref-url* cmd) :external-format-in :utf-8 :want-stream t))))
 
+;;; Let's generate all the API functions!
+
 #+nil
 (with-open-file (s (asdf:system-relative-pathname :cl-wepay "./wepay-api.lisp") :direction :output :external-format :utf8)
   (format s "(in-package wepay)~%~%;;; The WePay API~%~%")
@@ -92,9 +97,3 @@
      do (format s "~%~%;;; wepay API function ~a~%~%(export '~a)~%" name name)
        (pprint func-def s)))
 
-#+nil
-(tbnl:define-easy-handler (json-test :uri "/call2") ()
-  (setf (tbnl:content-type*) "application/json")
-  (let* ((data (json:decode-json (hunchentoot:raw-post-data :want-stream t))))
-    (setf %json% data)
-    (json:encode-json-to-string `((received . ,data)))))
