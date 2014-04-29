@@ -36,7 +36,7 @@
 ;;; The fun stuff: reading and parsing the doc pages to generate the client interface functions
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (in-readtable :fare-quasiquote))
+  (named-readtables:in-readtable :fare-quasiquote))
 
 (defun extract-function-info (html)
   (match html
@@ -88,7 +88,7 @@
 ;;; Let's generate all the API functions!
 
 #+nil
-(with-open-file (s (asdf:system-relative-pathname :cl-wepay "./wepay-api.lisp") :direction :output :external-format :utf8)
+(with-open-file (s (asdf:system-relative-pathname :cl-wepay "./wepay-api2.lisp") :direction :output :external-format :utf8)
   (format s "(in-package wepay)~%~%;;; The WePay API~%~%")
   (loop for func-def in (mapcan 'make-wepay-api-from-html
                                 '("app" "user" "account" "checkout" "preapproval" "withdrawal" "credit_card"
