@@ -1,0 +1,7 @@
+* cl-wepay - A Common Lisp client interface to the WePay Payments API
+See https://www.wepay.com/ for more details about the API itself.
+
+** Description
+All the client interface functions have been auto-generated from the API documentation pages on the WePay web site.
+-wepay.lisp contains the code used for that code generation
+-wepay-api.lisp is generated file containing the API functions
